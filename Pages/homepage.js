@@ -15,7 +15,7 @@ class HomePage{
     }
 
     async click_On_Jobs(){
-        await this.page.locator(this.JobsPage).click()
+        await this.page.locator(this.JobsPage).first().click()
     }
 }
 
