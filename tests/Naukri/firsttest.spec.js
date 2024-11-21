@@ -1,9 +1,17 @@
 import { test, expect } from '@playwright/test'
+import { LoginPage } from '../../Pages/loginpage';
+import { HomePage } from '../../Pages/homepage';
+import { ProfilePage } from '../../Pages/profilepage';
+import { JobsPage } from '../../Pages/jobspage';
 
 let page;
 let context;
 let jobTitles;
 let expRanges;
+let loginpage;
+let homepage;
+let profilepage;
+let JobsPage;
 
 //const arr = ['QA', 'Automation', 'Test', 'Selenium', 'Testing', 'Test Engineer', 'SDET', 'Test','Playwright'];
 const arr = ['QA', 'Automation', 'Quality', 'Tester', 'Testing', 'Test', 'Assurance', 'QA Analyst', 'SDET', 'Selenium', 'Cypress', 'Test Engineer', 'Testers', 'Tosca', 'playwright']
@@ -12,37 +20,29 @@ const years = ['0', '1', '2', '3'];
 test.beforeAll("Login to Naukri Account", async ({ browser }) => {
     context = await browser.newContext();
     page = await context.newPage();
-    await page.goto("https://www.naukri.com/")
+    loginpage = new LoginPage(page);
+    homepage= new HomePage(page);
+    profilepage= new ProfilePage(page);
+    jobspage= new JobsPage(page);
 
-    await page.locator("#login_Layer").click();
-    await page.getByPlaceholder('Enter your active Email ID / Username').fill('shanmukhbandaru9961@gmail.com')
-    await page.getByPlaceholder('Enter your password').fill('Shancol@24')
-    await page.locator("button[type='submit']").click();
+    await loginpage.navigateToNaukri("https://www.naukri.com/")
+
+    await loginpage.naukriLogin();
     await expect(page).toHaveURL('https://www.naukri.com/mnjuser/homepage');
 
 })
 
 test('update resume in My Profile summary', async () => {
 
-    await page.locator('.view-profile-wrapper a').click()
-    const resumeVisible = await page.locator("span[data-title='delete-resume']").isVisible();
-
-    if (resumeVisible) {
-        await page.locator("span[data-title='delete-resume']").click()
-        await page.locator('.lightbox.model_open.flipOpen button').click()
-    }
-
-    await page.locator('input#attachCV').setInputFiles('tests/fixtures/Shanmuka_QA_Resume_NOV2024.pdf');
-    await page.locator('.resume-name-inline div').textContent();
-    await expect(await page.locator('.resume-name-inline div').textContent()).toBe('Shanmuka_QA_Resume_NOV2024.pdf');
+    await homepage.click_On_ViewProfile();
+    await profilepage.deleteResume()
+    await profilepage.uploadResume()
+    //validate updated resume Name
+    await expect(await profilepage.getResumeName()).toBe(profilepage.resumename);
 })
 
 test('update Resume Headline in My Profile Summary', async () => {
-    await page.locator('.widgetHead span:has-text("Resume headline") + span').click()
-    await page.locator('.input-field.s12 textarea').clear()
-    await page.locator('.input-field.s12 textarea').fill("Experienced Automation Tester | 2.5 Years | Proficient in Selenium, Java, playwright, JavaScript, Cucumber BDD, Hybrid Framework, SQL, Rest Assured, API Testing")
-
-    await page.locator('.action.s12 button').click();
+    await profilepage.updateResumeHeadLine()
 
 });
 
@@ -51,15 +51,12 @@ test.skip('search and apply for Jobs', async () => {
     test.setTimeout(0);
 
     // Click on the Jobs menu
-    await page.locator('.nI-gNb-menus li a div:has-text("Jobs")').first().click();
-
-    // Wait for the tabs to appear
-    await page.waitForSelector('.tab-list .tab-wrapper div:first-child');
+    await homepage.click_On_Jobs();
 
     // Use the locator API for tabs
-    const tabs = await page.locator('.tab-list .tab-wrapper div:first-child');
-    const tabCount = await tabs.count();
-    //console.log('Array size: ' + tabCount);
+    const tabCount = await JobsPage.getTabsCount()
+    const tabs = await page.locator(jobspage.jobTabsList);
+    
 
     // Loop through each tab and click
     for (let i = 0; i < tabCount; i++) {
@@ -67,8 +64,8 @@ test.skip('search and apply for Jobs', async () => {
         await tab.click();  // Click each tab
 
         // Get the job titles and experience range locators after clicking a tab
-         jobTitles = await page.locator('.list p');
-         expRanges = await page.locator('.naukicon-ot-experience + span');
+        jobTitles = await page.locator('.list p');
+        expRanges = await page.locator('.naukicon-ot-experience + span');
 
         // Get the count of job titles and iterate over them
         var jobTitleCount = await jobTitles.count();
@@ -158,11 +155,11 @@ test.skip('search and apply for Jobs', async () => {
     }
 });
 
-test.only('search and apply for RECOMMENDED Jobs', async () => {
+test.skip('search and apply for RECOMMENDED Jobs', async () => {
     test.setTimeout(0);
 
     // Click on the Jobs menu
-    await page.locator('.nI-gNb-menus li a div:has-text("Jobs")').first().click();
+    await homepage.click_On_Jobs();
 
     // Wait for the tabs to appear
     await page.waitForSelector('.tab-list .tab-wrapper div:first-child');
@@ -270,7 +267,7 @@ test.only('search and apply for RECOMMENDED Jobs', async () => {
                 // After hiding the job article, count should be reset and decremented by 1
                 jobTitleCount--;
                 await page.waitForTimeout(2000);
-                
+
             }
         }
         // jobTitles = await page.locator('.list p');
