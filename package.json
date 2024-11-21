@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "naukri:test":"npx playwright test tests/Naukri/firsttest.spec.js --project=chromium --headed"
+    "naukri:test":"npx playwright test tests/Naukri/firsttest.spec.js --project=chromium --headed",
+    "naukri:debug":"npx playwright test tests/Naukri/firsttest.spec.js --project=chromium --headed --debug"
+
   },
   "keywords": [],
   "author": "",

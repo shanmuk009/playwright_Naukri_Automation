@@ -21,18 +21,20 @@ class ProfilePage {
     }
 
     async deleteResume() {
-        const deleteResume = await this.page.locator(this.delete_Resume_Icon);
+        const deleteResume = await this.page.waitForSelector(this.delete_Resume_Icon);
 
         if (await deleteResume.isVisible()) {
-            await page.locator(this.delete_Resume_Icon).click()
-            await page.locator(this.confirm_Delete_Btn).click()
-            console.log("Resume Deleted successfully")
+            await this.page.locator(this.delete_Resume_Icon).click()
+            await this.page.locator(this.confirm_Delete_Btn).click().then(()=>{
+                console.log("resume deleted successfully")
+            })
+            
         }
     }
 
     async uploadResume() {
         await this.page.locator(this.resume_Input).setInputFiles(this.resumepath);
-        console.log("Resume Deleted successfully");
+        console.log("Resume uploaded successfully");
     }
 
     async getResumeName() {
