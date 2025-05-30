@@ -7,6 +7,13 @@ const { defineConfig, devices } = require('@playwright/test');
  */
 // require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
+if (!process.env.NODE_ENV) {
+  require('dotenv').config({ path: 'config/.env.prod' });
+} else {
+  require('dotenv').config({ path: `config/.env.${process.env.NODE_ENV}` });
+}
+
+
 /**
  * @see https://playwright.dev/docs/test-configuration
  */

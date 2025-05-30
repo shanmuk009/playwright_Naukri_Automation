@@ -13,8 +13,8 @@ class ProfilePage {
         this.resumeHeadLineSaveBtn = ".action.s12 button"
 
 
-        this.resumepath = "tests/fixtures/Shanmuka_QA_Resume_NOV2024.pdf";
-        this.resumename = "Shanmuka_QA_Resume_NOV2024.pdf"
+        this.resumepath = "tests/fixtures/Shanmuka_QA_Automation_Resume_Selenium_Playwright.pdf";
+        this.resumename = "Shanmuka_QA_Automation_Resume_Selenium_Playwright.pdf"
         this.resumeHeadLineText = "Experienced Automation Tester | 2.5 Years | Proficient in Selenium, Java, playwright, JavaScript, Cucumber BDD, Hybrid Framework, SQL, Rest Assured, API Testing"
 
 
