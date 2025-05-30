@@ -14,8 +14,8 @@ class LoginPage {
     }
     async naukriLogin() {
         await this.page.locator(this.login_layer).click();
-        await this.page.getByPlaceholder(this.userName).fill('shanmukhbandaru9961@gmail.com')
-        await this.page.getByPlaceholder(this.password).fill('Shancol@24')
+        await this.page.getByPlaceholder(this.userName).fill(process.env.userEmail)
+        await this.page.getByPlaceholder(this.password).fill(process.env.password)
         await this.page.locator(this.submit_Btn).click();
     }
 }

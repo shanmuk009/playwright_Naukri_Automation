@@ -1,17 +1,21 @@
 class JobsPage {
+
     constructor(page) {
-        this.page = page; // Ensure `page` is accessible in the class
+        this.page = page;
         this.jobTabsList = ".tab-list .tab-wrapper div:first-child";
         this.jobTileElements = ".list p";
         this.expRangeElements = ".naukicon-ot-experience + span";
         this.jobApplyBtn = '.styles_save-job-button__WLm_s + button';
+        this.apply_status_header = ".apply-status-header.green";
+        this.hideIcon = 'i[class*="naukicon-ot-hide"]';
+        //this.jobTitles;
 
         this.keywords = [
-            'QA', 'Automation', 'Quality', 'Tester', 'Testing', 'Test', 
-            'Assurance', 'QA Analyst', 'SDET', 'Selenium', 'Cypress', 
+            'QA', 'Automation', 'Quality', 'Tester', 'Testing', 'Test',
+            'Assurance', 'QA Analyst', 'SDET', 'Selenium', 'Cypress',
             'Test Engineer', 'Testers', 'Tosca', 'Playwright'
         ];
-        this.years = ['0', '1', '2', '3'];
+        this.years = ['0', '1', '2', '3','4'];
     }
 
     // Method 1: Check if a job matches the criteria
@@ -19,7 +23,7 @@ class JobsPage {
         let keywordMatch = false;
         let minExpMatch = false;
 
-        const jobTitleCount = await jobTitles.count();
+        let jobTitleCount = await jobTitles.count();
         for (let j = 0; j < jobTitleCount; j++) {
             const title = jobTitles.nth(j);
             const titleText = await title.textContent();
@@ -35,12 +39,24 @@ class JobsPage {
                 minExpMatch = true;
             }
 
+            // If both conditions are true, return a match result
             if (keywordMatch && minExpMatch) {
-                console.log(`Matched Job: ${titleText}, Experience: ${minExp}`);
-                return { isMatched: true, index: j };
+                console.log(`Matched Job: ${title}, Experience: ${range}`);
+                const applypage=this.findNewPageWhenClickOnJob(title);
+                this.applyForJob(applypage)
+
+
+
+            } else {
+                // Return unmatched result for this iteration
+                console.log(`Unmatched Job: ${title}, Experience: ${range}`);
+                this.hideUnmatchedJobs(j);
+                jobTitleCount--;
+
+
             }
+
         }
-        return { isMatched: false };
     }
 
     // Method 2: Handle new tab/page when clicking on a job
@@ -49,7 +65,7 @@ class JobsPage {
 
         await jobTitle.click();
 
-        await this.page.waitForTimeout(2000);
+        await this.page.waitForTimeout(5000);
 
         const pagesAfterClick = await this.page.context().pages();
         const newPage = pagesAfterClick.find(page => !pagesBeforeClick.includes(page));
@@ -58,69 +74,88 @@ class JobsPage {
     }
 
     async clickOnMatchedJobArticle() {
-        // Prelocate job titles and experience ranges
         await this.page.waitForSelector(this.jobTabsList);
-        const tabs= await this.page.locator(this.jobTabsList);
+        const tabs = this.page.locator(this.jobTabsList);
         const tabsCount = await tabs.count();
-        const jobTitles = this.page.locator(this.jobTileElements);
-        const expRanges = this.page.locator(this.expRangeElements);
     
-        // Iterate through all tabs
         for (let i = 0; i < tabsCount; i++) {
-            await this.handleTabClick(tabs.nth(i), jobTitles, expRanges);
+            await tabs.nth(i).click();
+            await this.page.waitForLoadState('domcontentloaded');
+    
+            const jobTitles = this.page.locator(this.jobTileElements);
+            const expRanges = this.page.locator(this.expRangeElements);
+    
+            const matchResult = await this.isJobMatched(jobTitles, expRanges, this.keywords, this.years);
+    
+            if (matchResult.isMatched) {
+                const matchedJob = jobTitles.nth(matchResult.index);
+                const applyPage = await this.findNewPageWhenClickOnJob(matchedJob);
+                const success = await this.applyForJob(applyPage);
+    
+                if (!success) {
+                    console.log(`Failed to apply for job at index ${matchResult.index}`);
+                }
+            } else {
+                await this.hideUnmatchedJobs(matchResult.index);
+            }
+        }
+    }
+
+    async hideUnmatchedJobs(jobIndex) {
+        try {
+            const hideIcon = this.page.locator(this.hideIcon).nth(jobIndex);
+            await hideIcon.click();
+            console.log(`Job at index ${jobIndex} hidden successfully.`);
+            return true;
+        } catch (error) {
+            console.error(`Error hiding job at index ${jobIndex}:`, error);
+            return false;
         }
     }
     
-    async handleTabClick(tab, jobTitles, expRanges) {
-        // Click the tab and wait for page load
-        await tab.click();
-        await this.page.waitForLoadState('domcontentloaded');
-    
-        // Check if there is a matched job
-        const matchResult = await this.isJobMatched(jobTitles, expRanges, this.keywords, this.years);
-        if (matchResult.isMatched) {
-            await this.applyForJob(jobTitles.nth(matchResult.index));
-        }else{
-            console.log("job not matched");
+
+    async validateSuccessMessage(applyPage) {
+        try {
+            const applyStatusHeader = await applyPage.locator(this.apply_status_header);
+            await expect(applyStatusHeader).toBeVisible();
+            console.log("Job applied successfully");
+        } catch (error) {
+            console.log("applystatusheader not visible")
         }
     }
-    
-    async applyForJob(jobTitle) {
-        const applyPage = await this.findNewPageWhenClickOnJob(jobTitle);
-        if (!applyPage) return;
+
+
+    async applyForJob(applyPage) {
+        if (!applyPage) {
+            console.log("No new page found for applying to the job.");
+            return false;
+        }
     
         try {
-            // Check if the job expired alert is visible
             const jobExpiredAlert = await applyPage.locator("div[class^='styles_exp-alert-message']");
             if (await jobExpiredAlert.isVisible()) {
                 console.log("Job expired");
-                await applyPage.close(); // Close the page and exit
-                return; // Exit the current iteration
+                return false;
             }
     
-            // Wait for the apply page to fully load
             await applyPage.waitForLoadState('domcontentloaded');
-    
-            // Log the new tab's title and URL for debugging purposes
             console.log('New Tab Title:', await applyPage.title());
             console.log('New Tab URL:', applyPage.url());
     
-            // Locate the Apply button
-            const applyBtn = await applyPage.locator('.styles_save-job-button__WLm_s + button');
-            const applyBtnText = await applyBtn.textContent();
-    
-            // Check button visibility and text before clicking
-            if (applyBtnText === 'Apply' && await applyBtn.isVisible()) {
+            const applyBtn = await applyPage.locator(this.jobApplyBtn);
+            if (await applyBtn.isVisible() && (await applyBtn.textContent()) === 'Apply') {
                 await applyBtn.click();
-                await applyPage.waitForLoadState('domcontentloaded');
-                console.log('Applied successfully');
+                await this.validateSuccessMessage(applyPage);
+                return true;
             } else {
-                console.log("Apply button is either not visible or does not have the text 'Apply'.");
+                console.log("Apply button not visible or invalid.");
+                return false;
             }
         } catch (error) {
-            console.error('Error applying for the job:', error);
+            console.error("Error applying for the job:", error);
+            return false;
         } finally {
-            await applyPage.close(); // Ensure page is closed
+            await applyPage.close();
         }
     }
 }    

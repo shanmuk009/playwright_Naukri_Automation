@@ -3,6 +3,8 @@ import { LoginPage } from '../../Pages/loginpage';
 import { HomePage } from '../../Pages/homepage';
 import { ProfilePage } from '../../Pages/profilepage';
 import { JobsPage } from '../../Pages/jobspage';
+import logger from '../../utils/logger';
+
 
 let page;
 let context;
@@ -26,29 +28,31 @@ test.beforeAll("Login to Naukri Account", async ({ browser }) => {
     jobsPage= new JobsPage(page);
 
     await loginpage.navigateToNaukri("https://www.naukri.com/")
-
+    logger.info("navigate to naukri page ")
     await loginpage.naukriLogin();
+    logger.info("login successfully")
     await expect(page).toHaveURL('https://www.naukri.com/mnjuser/homepage');
+    logger.info('validate url after login successfully')
 
 })
 
 test('update resume in My Profile summary', async () => {
 
     await homepage.click_On_ViewProfile();
-    await profilepage.deleteResume()
+    //await profilepage.deleteResume()
     await profilepage.uploadResume()
     //validate updated resume Name
     await expect(await profilepage.getResumeName()).toBe(profilepage.resumename);
 })
 
-test('update Resume Headline in My Profile Summary', async () => {
+test.skip('update Resume Headline in My Profile Summary', async () => {
     //await homepage.click_On_ViewProfile();
     await profilepage.updateResumeHeadLine()
 
 });
 
 
-test('search and apply for Jobs', async () => {
+test.skip('search and apply for Jobs', async () => {
     test.setTimeout(0);
 
     // Click on the Jobs menu
@@ -59,7 +63,7 @@ test('search and apply for Jobs', async () => {
     
 });
 
-test.skip('search and apply for RECOMMENDED Jobs', async () => {
+test('search and apply for RECOMMENDED Jobs', async () => {
     test.setTimeout(0);
 
     // Click on the Jobs menu

@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "naukri:test":"npx playwright test tests/Naukri/firsttest.spec.js --project=chromium --headed",
-    "naukri:debug":"npx playwright test tests/Naukri/firsttest.spec.js --project=chromium --headed --debug"
-
+    "naukri:test": "npx playwright test tests/Naukri/firsttest.spec.js --project=chromium --headed",
+    "naukri:debug": "npx playwright test tests/Naukri/firsttest.spec.js --project=chromium --headed --debug"
   },
   "keywords": [],
   "author": "",
@@ -14,5 +13,10 @@
   "devDependencies": {
     "@playwright/test": "^1.48.0",
     "@types/node": "^22.7.5"
+  },
+  "dependencies": {
+    "csv-parser": "^3.0.0",
+    "dotenv": "^16.4.5",
+    "winston": "^3.17.0"
   }
 }
